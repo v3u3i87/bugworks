@@ -73,7 +73,6 @@ class Application{
     private function setRequestLog()
     {
         $_header = getHeader();
-        $Requset = '';
         if (is_run_evn()) {
             if (isset($_SERVER ['REQUEST_URI'])) $Requset =  $_SERVER ['REQUEST_URI'];
         } else {
@@ -85,7 +84,12 @@ class Application{
         $body.= 'Ip:'.getClient_id()."\n";
         $body.= 'Method:'.(isset($_SERVER["REQUEST_METHOD"]) ? $_SERVER["REQUEST_METHOD"] : 'cli')."\n";
         $body.= 'Header:'.json($_header)."\n";
-        $body.= 'Parameter:'.json(Data::all())."\n";
+        $requestData = Data::all();
+        if(is_string($requestData)){
+            $body.= 'Parameter:'.$requestData."\n";
+        }else{
+            $body.= 'Parameter:'.json($requestData)."\n";
+        }
         Log::run($body);
     }
 

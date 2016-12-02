@@ -107,12 +107,15 @@ class Run
      */
     public function change()
     {
-        switch ($this->is_type()) {
+        switch ($this->is_type())
+        {
             case 'array':
-                if ($this->type == 'json') {
+                if ($this->type == 'json')
+                {
                     $this->content = $this->setJson();
                     $this->contentType($this->contentTypeJson);
-                } elseif ($this->type == 'xml') {
+                } elseif ($this->type == 'xml')
+                {
                     $this->content = $this->setXml();
                     $this->contentType($this->contentTypeXml);
                 } else {
