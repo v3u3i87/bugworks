@@ -8,6 +8,8 @@ use app\dao\UserDao;
 class PublicAction extends BaseAction
 {
 
+    public $verifyToken = false;
+
 
     /**
      * 登陆
@@ -15,6 +17,8 @@ class PublicAction extends BaseAction
      */
     public function login()
     {
+//        $this->verifyToken = false;
+
         $result = $this->checkParam([
             'email'=>'登陆邮箱不得为空',
             'passwd'=>'密码不得为空',
