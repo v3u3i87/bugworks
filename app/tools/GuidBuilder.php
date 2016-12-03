@@ -1,5 +1,5 @@
 <?php
-namespace bin\tools;
+namespace app\tools;
 /**
  * About:Richard.z
  * Email:v3u3i87@gmail.com

@@ -13,7 +13,13 @@ return array(
     /*
      * 生产环境
      */
-    'debug'=>true,
+    'debug'=>false,
+
+    /**
+     * 判断是否开启api模式,如果开启API模式,全局异常抛出json格式
+     */
+    'is_api'=>true,
+
 
     /*
      * 是否开启前端域名

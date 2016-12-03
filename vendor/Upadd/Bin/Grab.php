@@ -40,10 +40,6 @@ class Grab extends Debug
     public static function setError($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
     {
         $error = [$errno, $errstr, $errfile, $errline, $errcontext];
-        if (Config::get('tag@debug'))
-        {
-            self::printError($error);
-        }
         $body = "Error\n";
         $body .= "---\n";
         $body .= "Level:" . $error[0] . "\n";
@@ -55,6 +51,10 @@ class Grab extends Debug
         }
         $body .= "---\n";
         Log::run($body);
+        if (Config::get('tag@debug'))
+        {
+            self::printError($error);
+        }
     }
 
     /**
@@ -70,9 +70,21 @@ class Grab extends Debug
             'code' => $e->getCode(),
             'previous' => $e->getPrevious()
         ];
-        if (Config::get('tag@debug'))
+
+        /**
+         * 判断是否开启API模式
+         */
+        if(Config::get('tag@is_api'))
         {
-            self::printError($error);
+            echo $error['msg'];
+        }else{
+            /**
+             * 判断是否开启调试模式
+             */
+            if (Config::get('tag@debug'))
+            {
+                self::printError($error);
+            }
         }
     }
 
@@ -109,7 +121,13 @@ class Grab extends Debug
      */
     private static function printError($error = [])
     {
-        if ($error) {
+        if ($error)
+        {
+            $endtime = "========printError\n\r";
+            $endtime.= "Date:" . date('Y/m/d H:i:s') . "\n";
+            $endtime.=json($error);
+            $endtime .= "\r\n" . "======\n\r";
+            Log::run($endtime);
             if (is_run_evn()) {
                 echo '<pre>';
                 print_r($error);

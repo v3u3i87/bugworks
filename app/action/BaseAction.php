@@ -3,13 +3,56 @@ namespace app\action;
 
 use Data;
 use Config;
+use Upadd\Bin\UpaddException;
+use app\dao\UserDao;
+
 
 class BaseAction extends \Upadd\Frame\Action
 {
 
+    /**
+     * 判断是否验证token
+     * @var bool
+     */
+    public $verifyToken = true;
+
+    /**
+     * 用户资料
+     * @var array
+     */
+    public $userData = [];
+
     public function __construct()
     {
+        if ($this->verifyToken === true)
+        {
+            $verify = $this->verifyToken();
+            if ($verify !== true)
+            {
+                throw new UpaddException(json($verify));
+            }
+        }
+    }
 
+
+    /**
+     * 验证TOKEN
+     * @return array
+     */
+    public function verifyToken()
+    {
+        $token = Data::get('token');
+        if ($token) {
+            $bool = UserDao::is_token($token);
+            if ($bool['bool'] == false) {
+                return $this->msg(208, 'token失效..');
+            } else {
+                $this->userData = $bool['data'];
+            }
+            return true;
+        } else {
+            return $this->msg(204, '非法请求..');
+        }
     }
 
     /**
@@ -20,7 +63,6 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function msg($code = 204, $msg = 'efault error', $data = array())
     {
-        header('Content-type: application/json');
         return ['code' => $code, 'msg' => $msg, 'data' => $data];
     }
 
@@ -32,23 +74,20 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function checkParam($checkContent = [])
     {
-        return $this->setException(function () use($checkContent)
-        {
+        return $this->setException(function () use ($checkContent) {
             $result = $this->getData();
-            if ($result['bool'] == false)
-            {
+            if ($result['bool'] == false) {
                 return $this->errorParam($result['data']);
             }
             $request = $result['data'];
             $list = [];
-            foreach ($checkContent as $k => $v)
-            {
-                if(isset($request[$k])) {
+            foreach ($checkContent as $k => $v) {
+                if (isset($request[$k])) {
                     $list[$k] = $request[$k];
                     if ($list[$k] == null) {
                         return $this->errorParam($v);
                     }
-                }else{
+                } else {
                     return $this->errorParam($v);
                 }
             }
@@ -83,8 +122,9 @@ class BaseAction extends \Upadd\Frame\Action
      */
     protected function getData()
     {
-        return $this->setException(function () {
-            $data = Data::all();
+        return $this->setException(function ()
+        {
+            $data = Data::get('stream');
             if ($data) {
                 //Whether complex decryption ?
                 $data = json(base64_decode($data));
@@ -118,7 +158,6 @@ class BaseAction extends \Upadd\Frame\Action
             return $e;
         }
     }
-
 
 
 }

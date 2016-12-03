@@ -8,11 +8,16 @@ Routes::get('/',function() {
 Routes::post('/api/v1/login','app\action\PublicAction@login');
 
 
-Routes::group(array('prefix' => '/api/v1/'), function ()
+Routes::group(array('prefix' => '/api/v1'), function ()
 {
 
     //退出
-    Routes::any('/logout', 'app\action\UserAction@logout');
+    Routes::any('/account/logout', 'app\action\UserAction@logout');
+    //创建账号
+    Routes::post('/account/create', 'app\action\UserAction@create');
+    //更新密码
+    Routes::any('/account/change/password', 'app\action\UserAction@change_password');
+
 
     /////项目
 

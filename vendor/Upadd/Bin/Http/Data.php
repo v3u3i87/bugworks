@@ -58,7 +58,7 @@ class Data
         $data = file_get_contents("php://input");
         if ($data) {
             if (count($this->_setData) >= 1) {
-                $this->_setData = array_merge($this->_setData, $data);
+                $this->_setData = array_merge($this->_setData, ['stream'=>$data]);
             }else{
                 $this->_setData = $data;
             }
