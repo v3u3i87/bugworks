@@ -3,6 +3,7 @@ namespace app\action;
 
 use Data;
 use Config;
+use Log;
 use Upadd\Bin\UpaddException;
 use app\dao\UserDao;
 
@@ -21,6 +22,9 @@ class BaseAction extends \Upadd\Frame\Action
      * @var array
      */
     public $userData = [];
+
+    public $token = null;
+
 
     public function __construct()
     {
@@ -41,9 +45,9 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function verifyToken()
     {
-        $token = Data::get('token');
-        if ($token) {
-            $bool = UserDao::is_token($token);
+        $this->token = Data::get('token');
+        if ($this->token) {
+            $bool = UserDao::is_token($this->token);
             if ($bool['bool'] == false) {
                 return $this->msg(208, 'token失效..');
             } else {
@@ -63,8 +67,52 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function msg($code = 204, $msg = 'efault error', $data = array())
     {
-        return ['code' => $code, 'msg' => $msg, 'data' => $data];
+        $msg =  ['code' => $code, 'msg' => $msg, 'data' => $data];
+        $this->setRequestData($msg);
+        return $msg;
     }
+
+    /**
+     * 请求数据
+     */
+    protected function setRequestData($response=[])
+    {
+        $url = 'cli';
+        if (is_run_evn()) {
+            if (isset($_SERVER ['REQUEST_URI'])) {
+                $url = $_SERVER ['REQUEST_URI'];
+            }
+        }
+        $requestData = Data::all();
+        if (is_array($requestData)) {
+            $requestData = json($requestData);
+        }
+
+        $head = getHeader();
+        if ($head) {
+            $head = json($head);
+        }
+
+        $data = [
+            'type'=>1,
+            'client'=>1,
+            'header' => $head,
+            'host' => (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ''),
+            'url' => $url,
+            'client_ip' => getClient_id(),
+            'method' => (isset($_SERVER["REQUEST_METHOD"]) ? $_SERVER["REQUEST_METHOD"] : 'cli'),
+            'request' => $requestData,
+            'request_time' => time(),
+            'token'=>$this->token,
+            'response'=>json($response),
+            'response_time'=>time(),
+            'version'=>Config::get('app@version'),
+        ];
+        Log::notes($data,'log_request.logs');
+    }
+
+
+
 
     /**
      * 检查必须参数

@@ -101,6 +101,7 @@ class UserDao extends BaseDao
             'token_key' => $token_key,
             'login_time' => $time,
             'client' => 1,
+            'login_ip'=>$getClient_id
         ]);
 
         if ($upAcc) {

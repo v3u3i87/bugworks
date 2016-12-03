@@ -61,16 +61,23 @@ class Request
 
 
     /**
+     * 请求数据
+     * @var array
+     */
+    public $requestData = [];
+
+
+    /**
      * 获取实例化工作对象
      * @param $_work
      * @param $argv
      */
-    public function getInit($_work, $argv)
+    public function getInit($_work, $argv=[],$requestData)
     {
         $this->_work = $_work;
         $this->_cliData = getArgs($argv);
+        $this->requestData = $requestData;
     }
-
 
     /**
      * 命令行模式
@@ -235,7 +242,8 @@ class Request
 
                 $tmpData = null;
 
-                if (is_run_evn()) {
+                if (is_run_evn())
+                {
                     $class->init();
                     $tmpData = func_get_args();
                 } else {
