@@ -47,6 +47,7 @@ class UserDao extends BaseDao
         $addData['passwd'] = password_hash($data['passwd'] . $addData['passwd_random'], PASSWORD_DEFAULT);
         $addData['email'] = $data['email'];
         $addData['roles_id'] = $data['roles_id'];
+        $addData['guid_md5'] = md5($addData['guid']);
         $addData['status'] = 1;
         $addData['update_time'] = time();
         $addData['create_time'] = time();

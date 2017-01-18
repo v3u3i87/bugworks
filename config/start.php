@@ -3,7 +3,7 @@
 return array(
 
     'environment' => array(
-        'local' => array('RR-ZMQ', 'demo', 'Mac-zmq.local', 'Mac-zmq.lan','localhost'),
+        'local' => array('RR-ZMQ', 'demo', 'Mac-zmq.local', 'Mac-zmq.lan','localhost','172-13-51-211.lightspeed.milwwi.sbcglobal.net'),
     ),
 
     'is_autoload' => false,

@@ -6,6 +6,7 @@ use Config;
 use Log;
 use Upadd\Bin\UpaddException;
 use app\dao\UserDao;
+use app\model\LogRequest;
 
 
 class BaseAction extends \Upadd\Frame\Action
@@ -108,6 +109,7 @@ class BaseAction extends \Upadd\Frame\Action
             'response_time'=>time(),
             'version'=>Config::get('app@version'),
         ];
+        LogRequest::add($data);
         Log::notes($data,'log_request.logs');
     }
 
@@ -124,22 +126,19 @@ class BaseAction extends \Upadd\Frame\Action
     {
         return $this->setException(function () use ($checkContent) {
             $result = $this->getData();
-            if ($result['bool'] == false) {
+            if ($result['bool'] == false)
+            {
                 return $this->errorParam($result['data']);
             }
-            $request = $result['data'];
-            $list = [];
-            foreach ($checkContent as $k => $v) {
-                if (isset($request[$k])) {
-                    $list[$k] = $request[$k];
-                    if ($list[$k] == null) {
-                        return $this->errorParam($v);
-                    }
-                } else {
+            $data = $result['data'];
+            foreach ($checkContent as $k => $v)
+            {
+                if(array_key_exists($k,$data) == false)
+                {
                     return $this->errorParam($v);
                 }
             }
-            return $this->successParam($list);
+            return $this->successParam($data);
         });
     }
 
