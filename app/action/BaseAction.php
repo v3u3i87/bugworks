@@ -3,13 +3,61 @@ namespace app\action;
 
 use Data;
 use Config;
+use Log;
+use Upadd\Bin\UpaddException;
+use app\dao\UserDao;
+use app\model\LogRequest;
+
 
 class BaseAction extends \Upadd\Frame\Action
 {
 
+    /**
+     * 判断是否验证token
+     * @var bool
+     */
+    public $verifyToken = true;
+
+    /**
+     * 用户资料
+     * @var array
+     */
+    public $userData = [];
+
+    public $token = null;
+
+
     public function __construct()
     {
+        if ($this->verifyToken === true)
+        {
+            $verify = $this->verifyToken();
+            if ($verify !== true)
+            {
+                throw new UpaddException(json($verify));
+            }
+        }
+    }
 
+
+    /**
+     * 验证TOKEN
+     * @return array
+     */
+    public function verifyToken()
+    {
+        $this->token = Data::get('token');
+        if ($this->token) {
+            $bool = UserDao::is_token($this->token);
+            if ($bool['bool'] == false) {
+                return $this->msg(208, 'token失效..');
+            } else {
+                $this->userData = $bool['data'];
+            }
+            return true;
+        } else {
+            return $this->msg(204, '非法请求..');
+        }
     }
 
     /**
@@ -20,9 +68,53 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function msg($code = 204, $msg = 'efault error', $data = array())
     {
-        header('Content-type: application/json');
-        return ['code' => $code, 'msg' => $msg, 'data' => $data];
+        $msg =  ['code' => $code, 'msg' => $msg, 'data' => $data];
+        $this->setRequestData($msg);
+        return $msg;
     }
+
+    /**
+     * 请求数据
+     */
+    protected function setRequestData($response=[])
+    {
+        $url = 'cli';
+        if (is_run_evn()) {
+            if (isset($_SERVER ['REQUEST_URI'])) {
+                $url = $_SERVER ['REQUEST_URI'];
+            }
+        }
+        $requestData = Data::all();
+        if (is_array($requestData)) {
+            $requestData = json($requestData);
+        }
+
+        $head = getHeader();
+        if ($head) {
+            $head = json($head);
+        }
+
+        $data = [
+            'type'=>1,
+            'client'=>1,
+            'header' => $head,
+            'host' => (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ''),
+            'url' => $url,
+            'client_ip' => getClient_id(),
+            'method' => (isset($_SERVER["REQUEST_METHOD"]) ? $_SERVER["REQUEST_METHOD"] : 'cli'),
+            'request' => $requestData,
+            'request_time' => time(),
+            'token'=>$this->token,
+            'response'=>json($response),
+            'response_time'=>time(),
+            'version'=>Config::get('app@version'),
+        ];
+        LogRequest::add($data);
+        Log::notes($data,'log_request.logs');
+    }
+
+
+
 
     /**
      * 检查必须参数
@@ -32,27 +124,21 @@ class BaseAction extends \Upadd\Frame\Action
      */
     public function checkParam($checkContent = [])
     {
-        return $this->setException(function () use($checkContent)
-        {
+        return $this->setException(function () use ($checkContent) {
             $result = $this->getData();
             if ($result['bool'] == false)
             {
                 return $this->errorParam($result['data']);
             }
-            $request = $result['data'];
-            $list = [];
+            $data = $result['data'];
             foreach ($checkContent as $k => $v)
             {
-                if(isset($request[$k])) {
-                    $list[$k] = $request[$k];
-                    if ($list[$k] == null) {
-                        return $this->errorParam($v);
-                    }
-                }else{
+                if(array_key_exists($k,$data) == false)
+                {
                     return $this->errorParam($v);
                 }
             }
-            return $this->successParam($list);
+            return $this->successParam($data);
         });
     }
 
@@ -83,8 +169,9 @@ class BaseAction extends \Upadd\Frame\Action
      */
     protected function getData()
     {
-        return $this->setException(function () {
-            $data = Data::all();
+        return $this->setException(function ()
+        {
+            $data = Data::get('stream');
             if ($data) {
                 //Whether complex decryption ?
                 $data = json(base64_decode($data));
@@ -118,7 +205,6 @@ class BaseAction extends \Upadd\Frame\Action
             return $e;
         }
     }
-
 
 
 }

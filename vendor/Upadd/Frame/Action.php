@@ -30,6 +30,8 @@ class Action
      */
     protected $_responseType = 'json';
 
+
+
     /**
      * 实例化
      */

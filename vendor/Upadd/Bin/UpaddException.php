@@ -30,7 +30,7 @@ class UpaddException extends Exception
 //        print_r($errcontext);
 //    }
 
-    public function __construct($msg = '', $code = 10000,Exception $previous = null)
+    public function __construct($msg = null, $code = 10000,Exception $previous = null)
     {
         parent::__construct($msg, $code, $previous);
     }

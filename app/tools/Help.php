@@ -1,5 +1,5 @@
 <?php
-namespace bin\verify;
+namespace app\tools;
 
 class Help{
 
@@ -49,7 +49,15 @@ class Help{
     }
 
 
-
+    /**
+     * 随机生成6位
+     * @return string
+     */
+    public static function random()
+    {
+        $randStr = str_shuffle('1234567890');
+        return substr($randStr, 0, 6);
+    }
 
 
 }

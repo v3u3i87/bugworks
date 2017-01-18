@@ -3,9 +3,12 @@ namespace app\action;
 
 use Data;
 use Config;
+use app\dao\UserDao;
 
 class PublicAction extends BaseAction
 {
+
+    public $verifyToken = false;
 
 
     /**
@@ -14,19 +17,27 @@ class PublicAction extends BaseAction
      */
     public function login()
     {
-        $data = $this->checkParam([
+//        $this->verifyToken = false;
+
+        $result = $this->checkParam([
             'email'=>'登陆邮箱不得为空',
             'passwd'=>'密码不得为空',
-            'code'=>'验证不能为空',
+//            'code'=>'验证不能为空',
         ]);
 
-        if($data['bool'] == true)
+        if($result['bool'] == true)
         {
-
+            $bool = UserDao::login($result['data']);
+            if ($bool['bool'] == true)
+            {
+                return $this->msg(200, '登陆成功',$bool['data']);
+            }
+            return $this->msg(201,$bool['data']);
         }else{
-            return $this->msg(206,$data['data']);
+            return $this->msg(206,$result['data']);
         }
     }
+
 
 
 

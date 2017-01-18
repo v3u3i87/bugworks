@@ -3,7 +3,7 @@
 return array(
 
     'environment' => array(
-        'local' => array('RR-ZMQ', 'demo', 'Mac-zmq.local', 'Mac-zmq.lan','localhost'),
+        'local' => array('RR-ZMQ', 'demo', 'Mac-zmq.local', 'Mac-zmq.lan','localhost','172-13-51-211.lightspeed.milwwi.sbcglobal.net'),
     ),
 
     'is_autoload' => false,
@@ -66,11 +66,14 @@ return array(
 
     'swoole'=>[],
 
+    //判断是否错误
     'is_http_url_error'=>false,
 
+    //请求错误跳转
     'http_url_error'=>'/',
 
     //是否抛出错误
     'is_console_error'=>true,
+
 
 );

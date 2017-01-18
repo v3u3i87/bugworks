@@ -6,7 +6,8 @@ use Upadd\Bin\Tool\Log;
 use Upadd\Bin\Response\Run as ResponseRun;
 use Upadd\Bin\Package\Data;
 
-class Application{
+class Application
+{
 
     /**
      * 配置文件
@@ -28,40 +29,47 @@ class Application{
 
 
     /**
+     * 请求数据
+     * @var array
+     */
+    public $requestData = [];
+
+
+    /**
      * 运行
      */
-    public function run($callable,$argv=[])
+    public function run($callable, $argv = [])
     {
+        $this->requestData = $this->requestData();
+
         //日志
         $this->setRequestLog();
 
         // 设置时区
-        date_default_timezone_set ( 'Asia/Shanghai' );
+        date_default_timezone_set('Asia/Shanghai');
 
         /**
          * 实例化对象
          */
-        $this->request()->getInit($this->_work,$argv);
+        $this->request()->getInit($this->_work, $argv,$this->requestData);
 
         /**
          * 判断运行环境
          */
-        if(is_run_evn())
-        {
-            if(is_callable($callable))
-            {
-                 call_user_func_array($callable,func_get_args());
+        if (is_run_evn()) {
+            if (is_callable($callable)) {
+                call_user_func_array($callable, func_get_args());
             }
 
             $this->_responseData = $this->request()->run_cgi();
-        }else{
+        } else {
             $this->_responseData = $this->request()->run_cli();
         }
 
         /**
          * 发送响应数据
          */
-        $_responseRun = new ResponseRun($this->_responseData,$this->request()->_responseType);
+        $_responseRun = new ResponseRun($this->_responseData, $this->request()->_responseType);
         $_responseRun->send();
     }
 
@@ -72,25 +80,47 @@ class Application{
      */
     private function setRequestLog()
     {
-        $_header = getHeader();
-        if (is_run_evn()) {
-            if (isset($_SERVER ['REQUEST_URI'])) $Requset =  $_SERVER ['REQUEST_URI'];
-        } else {
-            $Requset = 'cli';
-        }
-        $body = 'Run Start'."\n";
-        $body.= 'Host:'.(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '')."\n";
-        $body.= 'Requset:'.$Requset."\n";
-        $body.= 'Ip:'.getClient_id()."\n";
-        $body.= 'Method:'.(isset($_SERVER["REQUEST_METHOD"]) ? $_SERVER["REQUEST_METHOD"] : 'cli')."\n";
-        $body.= 'Header:'.json($_header)."\n";
-        $requestData = Data::all();
-        if(is_string($requestData)){
-            $body.= 'Parameter:'.$requestData."\n";
-        }else{
-            $body.= 'Parameter:'.json($requestData)."\n";
-        }
+        $_requestData = $this->requestData;
+        $body = 'Run Start' . "\n";
+        $body .= 'Host:' . $_requestData['host'] . "\n";
+        $body .= 'Url:' . $_requestData['url'] . "\n";
+        $body .= 'Ip:' . $_requestData['client_ip'] . "\n";
+        $body .= 'Method:' . $_requestData['method'] . "\n";
+        $body .= 'Header:' . $_requestData['header'] . "\n";
+        $body .= 'Parameter:' . $_requestData['request'] . "\n";
         Log::run($body);
+    }
+
+    /**
+     * 请求数据
+     */
+    protected function requestData()
+    {
+        $url = 'cli';
+        if (is_run_evn()) {
+            if (isset($_SERVER ['REQUEST_URI'])) {
+                $url = $_SERVER ['REQUEST_URI'];
+            }
+        }
+        $requestData = Data::all();
+        if (is_array($requestData)) {
+            $requestData = json($requestData);
+        }
+
+        $head = getHeader();
+        if ($head) {
+            $head = json($head);
+        }
+
+        return [
+            'header' => $head,
+            'host' => (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ''),
+            'url' => $url,
+            'client_ip' => getClient_id(),
+            'method' => (isset($_SERVER["REQUEST_METHOD"]) ? $_SERVER["REQUEST_METHOD"] : 'cli'),
+            'request' => $requestData,
+            'request_time' => time(),
+        ];
     }
 
     /**
@@ -110,14 +140,14 @@ class Application{
     public function getWorkModule()
     {
         return ($this->_work = [
-            'GetConfiguration'=>new \Upadd\Bin\Config\GetConfiguration,
-            'Request'=>new \Upadd\Bin\Http\Request,
-            'Route'=>new \Upadd\Bin\Http\Route,
-            'getSession'=>\Upadd\Bin\Session\getSession::init(),
-            'Log'=>new \Upadd\Bin\Tool\Log,
-            'Data'=>new \Upadd\Bin\Http\Data,
-            'Cache'=>new \Upadd\Bin\Cache,
-            'Async'=>new \Upadd\Bin\Async,
+            'GetConfiguration' => new \Upadd\Bin\Config\GetConfiguration,
+            'Request' => new \Upadd\Bin\Http\Request,
+            'Route' => new \Upadd\Bin\Http\Route,
+            'getSession' => \Upadd\Bin\Session\getSession::init(),
+            'Log' => new \Upadd\Bin\Tool\Log,
+            'Data' => new \Upadd\Bin\Http\Data,
+            'Cache' => new \Upadd\Bin\Cache,
+//            'Async' => new \Upadd\Bin\Async,
         ]);
     }
 
@@ -165,26 +195,20 @@ class Application{
      */
     public function setSession()
     {
-        if(is_run_evn())
-        {
-            if ($this->getSessionStatus())
-            {
+        if (is_run_evn()) {
+            if ($this->getSessionStatus()) {
                 $config = static::$_config['sys']['session'];
-                if ($config['domain'])
-                {
+                if ($config['domain']) {
                     ini_set('session.cookie_domain', $config['domain']);
                 }
-                if ($config['expire'])
-                {
+                if ($config['expire']) {
                     ini_set('session.gc_maxlifetime', $config['expire']);
                     ini_set('session.cookie_lifetime', $config['expire']);
                 }
-                if ($config['use_cookies'])
-                {
+                if ($config['use_cookies']) {
                     ini_set('session.use_cookies', $config['use_cookies'] ? 1 : 0);
                 }
-                if ($config['cache_limiter'])
-                {
+                if ($config['cache_limiter']) {
                     session_cache_limiter($config['cache_limiter']);
                 }
                 if ($config['cache_expire']) {
